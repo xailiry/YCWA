@@ -13,7 +13,7 @@
     <form method="post">
         {% csrf_token %}
         <textarea name="content" rows="4" placeholder="Write something..."></textarea>
-        <button type="submit">Submit</button>
+        <button type="submit" id="submit-button">Submit</button>
     </form>
     {% if user.is_superuser %}
         <form method="post" action="{% url 'delete_all_entries' %}">
@@ -30,8 +30,8 @@
             </div>
         {% endfor %}
     </div>
-    
-        <div class="pagination">
+
+    <div class="pagination">
     <span class="step-links">
         {% if page_obj.has_previous %}
             <a href="?page=1">« first</a>
@@ -47,8 +47,8 @@
             <a href="?page={{ page_obj.paginator.num_pages }}">last »</a>
         {% endif %}
     </span>
-        </div>
-    
+    </div>
+
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -58,6 +58,58 @@
             timestamp.textContent = date.toLocaleString();
         });
     });
+
+    document.querySelector('form').addEventListener('submit', function () {
+        const submitButton = document.getElementById('submit-button');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Submitting...';
+    });
+
+    // Функция для обновления записей
+    function updateEntries() {
+        const lastEntryId = document.querySelector('.entry:first-child .id_num')?.textContent.substring(1) || 0;
+
+        // Здесь мы используем правильный URL для получения новых записей
+        fetch(`/get-new-entries/?last_id=${lastEntryId}`)
+            .then(response => response.json())
+            .then(data => {
+                const entriesContainer = document.querySelector('.entries');
+                data.entries.forEach(entry => {
+                    const entryDiv = document.createElement('div');
+                    entryDiv.classList.add('entry');
+                    entryDiv.innerHTML = `
+                        <p>${entry.content}</p>
+                        <span class="timestamp">${new Date(entry.created_at).toLocaleString()}</span>
+                        <span class="id_num">#${entry.id}</span>
+                    `;
+                    entriesContainer.prepend(entryDiv);
+                });
+            })
+            .catch(error => console.error('Error fetching new entries:', error));
+    }
+
+    // Запускаем функцию каждые 5 секунд (5000 миллисекунд)
+    setInterval(updateEntries, 5000);
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const textarea = document.querySelector('textarea');
+        const form = document.querySelector('form');
+
+        textarea.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();  // предотвращает вставку новой строки
+                form.submit();  // отправляет форму
+            }
+        });
+
+        // Добавление обработки временных меток, как было ранее
+        const timestamps = document.querySelectorAll('.timestamp');
+        timestamps.forEach(function (timestamp) {
+            const date = new Date(timestamp.getAttribute('data-timestamp'));
+            timestamp.textContent = date.toLocaleString();
+        });
+    });
 </script>
+
 </body>
 </html>

@@ -1,15 +1,12 @@
-from datetime import datetime
-
 from django.core.exceptions import ValidationError
 from django.db import models
 
-
-# Create your models here.
+from django.utils import timezone
 
 
 class Entry(models.Model):
     content = models.TextField(max_length=200)
-    created_at = models.DateTimeField(default=datetime.now)
+    created_at = models.DateTimeField(default=timezone.now)
 
     def clean(self):
         if len(self.content.split()) > 200:
