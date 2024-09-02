@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anonymous Entries</title>
+    <link rel="stylesheet" href="{% static 'YCWA/styles.css' %}">
+</head>
+<body>
+<div class="container">
+    <h1>Anonymous Entries</h1>
+    <form method="post">
+        {% csrf_token %}
+        <textarea name="content" rows="4" placeholder="Write something..."></textarea>
+        <button type="submit">Submit</button>
+    </form>
+    {% if user.is_superuser %}
+        <form method="post" action="{% url 'delete_all_entries' %}">
+            {% csrf_token %}
+            <button type="submit" class="delete-all">Delete All</button>
+        </form>
+    {% endif %}
+    <div class="entries">
+        {% for entry in page_obj %}
+            <div class="entry">
+                <p>{{ entry.content }}</p>
+                <span class="timestamp" data-timestamp="{{ entry.created_at|date:'c' }}"></span>
+                <span class="id_num">#{{ entry.id }}</span>
+            </div>
+        {% endfor %}
+    </div>
+    
+        <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">« first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last »</a>
+        {% endif %}
+    </span>
+        </div>
+    
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const timestamps = document.querySelectorAll('.timestamp');
+        timestamps.forEach(function (timestamp) {
+            const date = new Date(timestamp.getAttribute('data-timestamp'));
+            timestamp.textContent = date.toLocaleString();
+        });
+    });
+</script>
+</body>
+</html>
